@@ -1,0 +1,120 @@
+@import "zeroing";
+%checkbox {
+	input {
+		width: 20px;
+		height: 20px;
+	}
+}
+/* Задаём стиль */
+body {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: 18px;
+	div.App {
+		width: 500px;
+		height: 400px;
+		overflow: hidden;
+
+		.tab {
+			display: flex;
+			width: 100%;
+			height: 365px;
+			justify-items: center;
+			border: 1px black solid;
+			overflow: auto;
+			padding: 5px 30px;
+			background-color: orange;
+			form {
+				width: 100%;
+				height: 100%;
+				display: grid;
+				background-color: #ddf;
+				border-radius: 20px;
+				h3 {
+					font-size: 1.6em;
+				}
+				label {
+					display: flex;
+					justify-content: space-between;
+					font-size: 1.2em;
+				}
+				label:not(:last-child),
+				h3 {
+					border-bottom: 1px solid #000;
+				}
+			}
+
+			.recognize {
+				grid-template: repeat(5, 1fr) / 1fr;
+				label {
+					align-items: center;
+					margin: 0 10px;
+				}
+			}
+			.control {
+				grid-template: 1fr 3fr 2fr 2fr / 1fr;
+				overflow: hidden;
+				* {
+					width: 100%;
+					white-space: nowrap;
+				}
+				h3 {
+					display: flex;
+					font-size: 1.75em;
+					justify-content: center;
+					align-items: center;
+				}
+				label {
+					display: grid;
+					width: 100%;
+					height: 100%;
+					padding: 0 10px;
+					align-items: center;
+				}
+				label:nth-child(3) {
+					grid-template: 1fr / 1fr 1fr;
+					border-bottom: 1px solid #000;
+					input {
+						margin-left: 10px;
+					}
+					@extend %checkbox;
+				}
+			}
+			.result {
+				label {
+					display: flex;
+					justify-content: space-between;
+					align-items: center;
+					padding: 0 10px;
+				}
+				label:nth-child(5) {
+					border-left: 1px solid #000;
+					margin-left: 60px;
+				}
+				@extend %checkbox;
+				button {
+					width: 50%;
+					height: 35px;
+					justify-self: center;
+					align-self: center;
+				}
+			}
+		}
+		.setting {
+			width: 100%;
+			height: 100%;
+
+			&__tab-switch {
+				height: 35px;
+				display: grid;
+				grid-template: 1fr, 1fr, 1fr, 1fr;
+				grid-template-areas: " . . . .";
+				grid-column-gap: 10px;
+				& .tab-switch__save {
+					background: aqua;
+				}
+			}
+		}
+	}
+}

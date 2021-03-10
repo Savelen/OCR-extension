@@ -1,0 +1,45 @@
+{
+	"manifest_version": 2,
+	"name": "OCR",
+	"version": "1.0",
+	"description": "Select block of site page and use OCR",
+	"icons": {
+		"48": "icons/orc.png"
+	},
+	"browser_action": {
+		"default_icon": {
+			"48": "icons/orc.png"
+		},
+		"default_title": "OCR",
+		"default_popup": "popup/popup.html"
+	},
+	"web_accessible_resources": [
+		"js/tesseract/worker.min.js",
+		"js/tesseract/tesseract-core.wasm.js",
+		"js/tesseract/traineddata/*.traineddata.gz"
+	],
+	"background": {
+		"scripts": [
+			"js/background.bundle.js"
+		],
+		"persistent": true
+	},
+	"content_scripts": [
+		{
+			"matches": [
+				"<all_urls>"
+			],
+			"js": [
+				"js/tabScript.bundle.js"
+			],
+			"run_at": "document_end"
+		}
+	],
+	"permissions": [
+		"activeTab",
+		"webRequest",
+		"webRequestBlocking",
+		"<all_urls>"
+	],
+	"content_security_policy": "script-src 'self' blob:; object-src 'self' blob:;"
+}
