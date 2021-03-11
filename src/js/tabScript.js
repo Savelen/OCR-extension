@@ -3,11 +3,21 @@ import mousePosition from '@js/mousePosition.js';
 import keyPress from "@js/keyPress.js";
 
 // detect browser
-var br = /Firefox/.test(navigator.userAgent) ? browser : chrome;
+let br = /Firefox/.test(navigator.userAgent) ? browser : chrome;
+
 
 // keyPress.js
-let keyEvent = new keyPress("Run", ['Control', 'Alt']);
-keyEvent.tracking();
+let settingControl = {}
+let keyEvent = {};
+br.runtime.onMessage.addListener(async message => {
+	if (message.message === "settingControl") {
+		settingControl = message.data;
+		if (keyEvent.hasOwnProperty('name')) { keyEvent.deleteTracking(); }
+		keyEvent = new keyPress("Run", settingControl.key);
+		keyEvent.tracking();
+	}
+});
+br.runtime.sendMessage({ message: "getControlData" });
 
 document.addEventListener("changeKeyPress", (event) => {
 	if (event.detail.name == "Run") {

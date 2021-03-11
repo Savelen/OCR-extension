@@ -46,10 +46,13 @@ body {
 			}
 
 			.recognize {
-				grid-template: repeat(5, 1fr) / 1fr;
+				grid-template: repeat(6, 1fr) / 1fr;
 				label {
 					align-items: center;
 					margin: 0 10px;
+				}
+				.lang {
+					width: 100px;
 				}
 			}
 			.control {

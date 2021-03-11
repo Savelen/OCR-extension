@@ -25,6 +25,11 @@ class OCR {
 		});
 	}
 
+	async setLang(lang) {
+		await this.worker.loadLanguage(lang);
+		await this.worker.initialize(lang);
+	}
+
 	async recognize(url) {
 		this.job = true;
 		let recognize = await this.worker.recognize(url);

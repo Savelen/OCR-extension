@@ -18,33 +18,43 @@ class keyPress {
 	 * Keypress tracking
 	 */
 	tracking() {
-		document.addEventListener("keydown", key => {
-			// Checking a new key for uniqueness
-			let eventGo;
-			if (this.keyPressed.hasOwnProperty(key.key)) eventGo = false;
-			else eventGo = true;
-
-			this.keyPressed[key.key] = true;
-			if (eventGo) this.check();
-		});
-		document.addEventListener("keyup", key => {
-			delete this.keyPressed[key.key];
-			this.check();
-		});
-		document.addEventListener("click", () => {
-			this.keyPressed = {};
-		})
-
+		document.addEventListener("keydown", this.keydown);
+		document.addEventListener("keyup", this.keyup);
+		document.addEventListener("click", this.click);
+	}
+	deleteTracking() {
+		document.removeEventListener("keydown", this.keydown);
+		document.removeEventListener("keyup", this.keyup);
+		document.removeEventListener("click", this.click);
 	}
 
+	keydown = (key) => {
+		// Checking a new key for uniqueness
+		let eventGo;
+		if (this.keyPressed.hasOwnProperty(key.key)) eventGo = false;
+		else eventGo = true;
+
+		this.keyPressed[key.key] = true;
+		if (eventGo) this.check();
+	};
+	keyup = (key) => {
+		delete this.keyPressed[key.key];
+		this.check();
+	};
+	click = () => {
+		this.keyPressed = {};
+	};
+
 	check() {
-		let complete = false;
+		let complete = true;
 		// Key matching
 		if (this.keyCode.length == Object.keys(this.keyPressed).length) {
 			for (const key in this.keyPressed) {
 				if (this.keyPressed.hasOwnProperty(key)) {
-					if (this.keyCode.indexOf(key) == -1) complete = false;
-					else complete = true;
+					if (this.keyCode.indexOf(key) == -1) {
+						complete = false;
+						break;
+					}
 				}
 			}
 		} else complete = false;

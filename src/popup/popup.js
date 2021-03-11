@@ -5,37 +5,22 @@ import { Tabs } from '@popup/tabs.js';
 
 class SettingInterface extends React.Component {
 
+
+
 	constructor(props) {
 		super(props);
 
-		this.state = { tabId: 1 };
+		this.br = /Firefox/.test(navigator.userAgent) ? browser : chrome;
+		this.state = {
+			tabId: 1,
+			accessSetting: false
+		};
 
-		let settingData = this.getSettingData();
-		if (settingData) this.state.settingData = settingData;
-		else {
-			this.state = {
-				settingData: {
-					recognize: {
-						scale: 1,
-						confidenceSymbol: 80,
-						confidenceWord: 25,
-						confidenceLine: 60,
-						confidenceText: 0,
-					},
-					control: {
-						key: "[ctr]",
-						button: false,
-					},
-					result: {
-						validation: true,
-						inBuffer: false,
-						soundSignal: false,
-						history: false,
-						historyFullText: false,
-					},
-				},
-			}
-		}
+		this.getSettingData();
+
+		this.br.runtime.onMessage.addListener(async (message) => {
+			if (message.message === "settingData") { this.setState({ settingData: message.data, accessSetting: true }) }
+		});
 	}
 
 	changeTab(tabId) {
@@ -53,28 +38,39 @@ class SettingInterface extends React.Component {
 		data[Tabs.getTab(tabId)] = { ...data[Tabs.getTab(tabId)], ...namedValue };
 		this.setState({ data });
 	}
-	saveSetting() {
-		localStorage.setItem("data", JSON.stringify(this.state.settingData));
+	async saveSetting() {
+		this.br.runtime.sendMessage({
+			message: "setSettingData",
+			data: this.state.settingData
+		});
 	}
 	getSettingData() {
-		return JSON.parse(localStorage.getItem('data'));
+		this.br.runtime.sendMessage({ message: "getSettingData" });
 	}
+
 	render() {
-		return (
-			<div className="setting">
-				<div className="setting__tab-switch tab-switch">
-					<button className={"tab-switch__" + Tabs.getTab(1)} onClick={() => this.changeTab(1)}>Recognize</button>
-					<button className={"tab-switch__" + Tabs.getTab(2)} onClick={() => this.changeTab(2)}>Control</button>
-					<button className={"tab-switch__" + Tabs.getTab(3)} onClick={() => this.changeTab(3)}>Result</button>
-					<button className="tab-switch__save" onClick={() => this.saveSetting()}>Save</button>
-				</div>
-				<Tabs
-					tabId={this.state.tabId}
-					data={this.state.settingData[Tabs.getTab(this.state.tabId)]}
-					handleOnChange={(event) => this.getChangeData(this.state.tabId, event)}
-				/>
-			</div >
-		)
+		if (this.state.accessSetting) {
+			return (
+				<div className="setting">
+					<div className="setting__tab-switch tab-switch">
+						<button className={"tab-switch__" + Tabs.getTab(1)} onClick={() => this.changeTab(1)}>Recognize</button>
+						<button className={"tab-switch__" + Tabs.getTab(2)} onClick={() => this.changeTab(2)}>Control</button>
+						<button className={"tab-switch__" + Tabs.getTab(3)} onClick={() => this.changeTab(3)}>Result</button>
+						<button className="tab-switch__save" onClick={() => this.saveSetting()}>Save</button>
+					</div>
+					<Tabs
+						tabId={this.state.tabId}
+						data={this.state.settingData[Tabs.getTab(this.state.tabId)]}
+						handleOnChange={(event) => this.getChangeData(this.state.tabId, event)}
+					/>
+				</div >
+			)
+		}
+		else {
+			return (
+				<h1>Loading...</h1>
+			)
+		}
 	}
 }
 

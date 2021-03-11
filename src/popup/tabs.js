@@ -74,7 +74,22 @@ class ControlTab extends React.Component {
 					<h3>Cпособ активации</h3>
 					<label>
 						Соченатие клавиш:
-						<input name="key" value={this.props.data.key} type='text' onChange={(event) => this.props.onChange(event)}></input>
+						<input
+							name="key"
+							value={JSON.stringify(this.props.data.key)}
+							type='text' onChange={(event) => {
+								let e = {};
+								e.target = {
+									name: event.target.name,
+									value: JSON.parse(event.target.value),
+									type: event.target.type
+								}
+								// if value is array than run onChange
+								if (Array.isArray(e.target.value) && e.target.value.length >= 1) {
+									this.props.onChange(e);
+								}
+							}}
+						></input>
 						<button onClick={(event) => {
 							console.log("something change");
 							event.preventDefault();
@@ -113,7 +128,17 @@ class RecognizeTab extends React.Component {
 				<form className={Tabs.getTab(this.props.tabId)}>
 					<label>
 						Маштобирование:
-						<input name="scale" value={this.props.data.scale} {...this.state.props}></input>
+						<input
+							name="lang"
+							type='text'
+							className='lang'
+							value={this.props.data.lang}
+							onChange={(event) => this.props.onChange(event)}
+						></input>
+					</label>
+					<label>
+						Маштобирование:
+						<input name="scale" value={this.props.data.scale} {...{ ...this.state.props, min: 1 }}></input>
 					</label>
 					<label>
 						Достоверность Символа:
@@ -132,7 +157,7 @@ class RecognizeTab extends React.Component {
 						<input name="confidenceText" value={this.props.data.confidenceText} {...this.state.props}></input>
 					</label>
 				</form>
-			</div>
+			</div >
 		)
 	}
 }
