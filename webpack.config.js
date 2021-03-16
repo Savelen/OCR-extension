@@ -1,4 +1,5 @@
 const Path = require('path');
+const fs = require('fs');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin')
 const MiniCss = require("mini-css-extract-plugin");
@@ -31,6 +32,7 @@ let aliasPath = (alias) => {
 		"@dist": Path.resolve(__dirname, "dist"),
 		"@js": Path.resolve(__dirname, "src/js"),
 		"@popup": Path.resolve(__dirname, "src/popup"),
+		"@audio": Path.resolve(__dirname, "src/audio"),
 		"@n_m": Path.resolve(__dirname, "node_modules/"),
 	}
 	if (alias === "all") return path;
@@ -47,7 +49,24 @@ let fromTo = (from, to = "") => {
 		to: aliasPath("@dist/" + to)
 	}
 }
-let outputPath = () => { }
+
+// Editing manifest.json (for development)
+fs.readFile(aliasPath('@src/manifest.json'), (err, data) => {
+	if (err) throw "Problem with read manifest.JSON";
+	let manifest = JSON.parse(data);
+	if (isProd) {
+		manifest.content_security_policy = "script-src 'self' blob:; object-src 'self' blob:;";
+		manifest.background.scripts = ["935.bundle.js", "320.bundle.js", "js/background.bundle.js"];
+	}
+	else {
+		manifest.content_security_policy = "script-src-elem  'unsafe-eval' chrome-extension:; script-src  'unsafe-eval' blob:; object-src 'self' blob:;";
+		manifest.background.scripts = ["js/background.bundle.js"];
+
+	}
+	fs.writeFile(aliasPath('@src/manifest.json'), JSON.stringify(manifest), (e) => {
+		if (e) throw "Proplem with write file manifest.json";
+	});
+});
 
 module.exports = {
 	entry: {
@@ -63,12 +82,10 @@ module.exports = {
 		alias: aliasPath("all")
 	},
 	optimization: {
-		splitChunks: {
-			// chunks: 'all'
-		},
+		splitChunks: isProd ? { chunks: 'all' } : {},
 		minimize: isProd,
 		minimizer: [
-			// new TerserPlugin({ parallel: true }),
+			new TerserPlugin({ parallel: true }),
 			new MinimiserCss({ parallel: true })
 		]
 	},
@@ -96,10 +113,11 @@ module.exports = {
 				fromTo(aliasPath("@src/manifest.json")),
 				fromTo(aliasPath("@n_m/tesseract.js/dist/worker.min.js"), "js/tesseract"),
 				fromTo(aliasPath("@n_m/tesseract.js/dist/tesseract.min.js"), "js/tesseract"),
-				fromTo(aliasPath("@n_m/tesseract.js-core/tesseract-core.wasm.js"), "js/tesseract")
+				fromTo(aliasPath("@n_m/tesseract.js-core/tesseract-core.wasm.js"), "js/tesseract"),
+				fromTo(aliasPath("@audio/successful.ogg"), "audio"),
+				fromTo(aliasPath("@audio/fail.ogg"), "audio"),
 			]
 		})
-
 	],
 	module: {
 		rules: [

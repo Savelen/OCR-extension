@@ -3,16 +3,19 @@
  */
 class keyPress {
 	name;
+	returnKey;
 	keyPress = false;
 	keyCode = ['Control'];
 	keyPressed = {};
 
 	/**
+	 * @param {string} name name returned in an event `event.detail.name`
 	 * @param {array} keyCode list code. Defaylt 'Control'
 	 */
-	constructor(name, keyCode = false) {
+	constructor(name, { key = false, returnKey = false }) {
 		this.name = name;
-		this.keyCode = keyCode || this.keyCode;
+		this.keyCode = key || this.keyCode;
+		this.returnKey = returnKey;
 	}
 	/**
 	 * Keypress tracking
@@ -43,6 +46,7 @@ class keyPress {
 	};
 	click = () => {
 		this.keyPressed = {};
+		if (this.returnKey) this.check();
 	};
 
 	check() {
@@ -70,7 +74,12 @@ class keyPress {
 		}
 	}
 	event() {
-		return new CustomEvent("changeKeyPress", { bubbles: true, detail: { name: this.name, keyPress: this.keyPress } });
+		if (this.returnKey) {
+			return new CustomEvent("changeKeyPress", { bubbles: true, detail: { name: this.name, keyPress: Object.keys(this.keyPressed) } });
+		}
+		else {
+			return new CustomEvent("changeKeyPress", { bubbles: true, detail: { name: this.name, keyPress: this.keyPress } });
+		}
 	}
 }
 

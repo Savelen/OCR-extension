@@ -13,13 +13,24 @@ class SettingInterface extends React.Component {
 		this.br = /Firefox/.test(navigator.userAgent) ? browser : chrome;
 		this.state = {
 			tabId: 1,
-			accessSetting: false
+			accessSetting: false,
+			accessHistory: false
 		};
 
 		this.getSettingData();
 
 		this.br.runtime.onMessage.addListener(async (message) => {
-			if (message.message === "settingData") { this.setState({ settingData: message.data, accessSetting: true }) }
+			let state = {}
+			if (message.message === "settingData") {
+				state.settingData = message.data
+				state.accessSetting = true;
+				this.setState(state);
+			}
+			if (message.message === "historyData") {
+				state.historyData = message.data
+				state.accessHistory = true;
+				this.setState(state);
+			}
 		});
 	}
 
@@ -47,9 +58,35 @@ class SettingInterface extends React.Component {
 	getSettingData() {
 		this.br.runtime.sendMessage({ message: "getSettingData" });
 	}
-
+	getHistoryData() {
+		this.br.runtime.sendMessage({ message: "getHistoryData" });
+	}
+	clearHistory() {
+		this.br.runtime.sendMessage({ message: "clearHistory" });
+	}
 	render() {
 		if (this.state.accessSetting) {
+			let props = { tabId: this.state.tabId, };
+			if (this.state.tabId < 4) {
+				props = Object.assign(props, {
+					data: this.state.settingData[Tabs.getTab(this.state.tabId)],
+					onChange: (event) => this.getChangeData(this.state.tabId, event),
+				});
+				if (this.state.tabId === 3) {
+					props = Object.assign(props, {
+						changeTab: (id) => this.changeTab(id),
+						clearHistory: () => this.clearHistory()
+					});
+				}
+			}
+			if (this.state.tabId === 4) {
+				props = Object.assign(props, {
+					getHistoryData: () => this.getHistoryData(),
+					accessHistory: this.state.accessHistory,
+					historyData: this.state.historyData,
+				});
+			}
+
 			return (
 				<div className="setting">
 					<div className="setting__tab-switch tab-switch">
@@ -58,17 +95,13 @@ class SettingInterface extends React.Component {
 						<button className={"tab-switch__" + Tabs.getTab(3)} onClick={() => this.changeTab(3)}>Result</button>
 						<button className="tab-switch__save" onClick={() => this.saveSetting()}>Save</button>
 					</div>
-					<Tabs
-						tabId={this.state.tabId}
-						data={this.state.settingData[Tabs.getTab(this.state.tabId)]}
-						handleOnChange={(event) => this.getChangeData(this.state.tabId, event)}
-					/>
+					<Tabs propsTab={props} />
 				</div >
 			)
 		}
 		else {
 			return (
-				<h1>Loading...</h1>
+				<h1 className={'loading'}>Loading...</h1>
 			)
 		}
 	}

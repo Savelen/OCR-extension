@@ -13,7 +13,7 @@ br.runtime.onMessage.addListener(async message => {
 	if (message.message === "settingControl") {
 		settingControl = message.data;
 		if (keyEvent.hasOwnProperty('name')) { keyEvent.deleteTracking(); }
-		keyEvent = new keyPress("Run", settingControl.key);
+		keyEvent = new keyPress("Run", { key: settingControl.key });
 		keyEvent.tracking();
 	}
 });

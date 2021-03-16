@@ -6,6 +6,7 @@ import OCR from '@js/OCR.js';
  * @param {number} y The y-axis coordinate
  * @param {number} width
  * @param {number} height
+ * @param {number} scale image scale
  */
 async function sendImage(id, x, y, width, height, scale = 1) {
 	br.tabs.captureVisibleTab((dataUrl) => {
@@ -22,12 +23,39 @@ async function sendImage(id, x, y, width, height, scale = 1) {
 		});
 	});
 }
+async function setHistory({ text, fullText = "" }) {
+	if (text || fullText) {
+		// new data for history
+		let data = { date: Date.now(), text: text }
+		let history = JSON.parse(localStorage.getItem('history'));
+		if (!Array.isArray(history)) history = [];
 
-// detect browser
-let br = /Firefox/.test(navigator.userAgent) ? browser : chrome;
+		if (fullText && fullText !== text) data.fullText = fullText;
+		else if (fullText === text) data.fullText = true;
+
+		if (history.length >= 10) history.shift();
+		history.push(data);
+		localStorage.setItem("history", JSON.stringify(history));
+	}
+}
+async function inBuffer(text) {
+	const el = document.createElement('textarea');
+	el.value = text;
+	document.body.appendChild(el);
+	el.select();
+	document.execCommand('copy');
+	document.body.removeChild(el);
+}
+/**
+ *
+ * @param {boolean} successful
+ */
+async function soundAlert(successful) {
+	let audio = new Audio("audio/" + (successful ? "successful.ogg" : "fail.ogg"));
+	audio.play();
+}
 // getting setting data (from popup)
-
-let getSettingData = () => {
+function getSettingData() {
 	let setting = JSON.parse(localStorage.getItem('data'));
 	if (!setting) {
 		setting = {
@@ -54,7 +82,12 @@ let getSettingData = () => {
 	}
 	return setting;
 }
-let pushSettingControl = (id, settingData) => {
+function getHistoryData() {
+	let history = JSON.parse(localStorage.getItem('history'));
+	if (!history) history = [];
+	return history;
+}
+function pushSettingControl(id, settingData) {
 	if (id !== -1) {
 		br.tabs.sendMessage(id, {
 			message: "settingControl",
@@ -62,6 +95,9 @@ let pushSettingControl = (id, settingData) => {
 		});
 	}
 }
+
+// detect browser
+let br = /Firefox/.test(navigator.userAgent) ? browser : chrome;
 
 let tabId = -1;
 br.runtime.onMessage.addListener(async (message, r) => {
@@ -75,8 +111,17 @@ br.runtime.onMessage.addListener(async (message, r) => {
 			data: settingData
 		});
 	}
+	else if (message.message === "getHistoryData") {
+		br.runtime.sendMessage({
+			message: "historyData",
+			data: getHistoryData()
+		});
+	}
 	else if (message.message === "getControlData") {
 		pushSettingControl(tabId, settingData);
+	}
+	else if (message.message === "clearHistory") {
+		localStorage.removeItem('history');
 	}
 	// saving new setting data
 	else if (message.message === "setSettingData") {
@@ -103,6 +148,7 @@ br.runtime.onMessage.addListener(async (message, r) => {
 	}
 	else if (message.message == "ready" && ocr.job == false) {
 		console.time("OCR");
+		// recognize
 		let t = await ocr.getConfidenceText(
 			message.data,
 			settingData.recognize.confidenceSymbol,
@@ -110,14 +156,29 @@ br.runtime.onMessage.addListener(async (message, r) => {
 			settingData.recognize.confidenceLine,
 			settingData.recognize.confidenceText
 		);
+
+		let textData = {};
 		if (settingData.result.validation) {
+			// save fulltext
+			if (settingData.result.historyFullText) {
+				textData.fullText = t;
+			}
+			// validation
 			t = t.replace(/[^\p{L}\p{Zs}0-9,.'"`?!-=()*:;+-/\[\]\\]/gu, "");
 		}
+		// result text
+		textData.text = t;
+
+		if (settingData.result.inBuffer) inBuffer(textData.text);
+		if (settingData.result.soundSignal) soundAlert(true);
+		if (settingData.result.history) setHistory(textData);
+
 		console.log(t);
 		console.log("_________________________________");
 		console.timeEnd("OCR");
 	}
 	else if (message.message == "error" || (message.message == "ready" && ocr.job == true)) {
+		if (settingData.result.soundSignal) soundAlert(false);
 		console.log("|-- !STOP! --|");
 	}
 });
