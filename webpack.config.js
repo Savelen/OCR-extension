@@ -56,12 +56,18 @@ fs.readFile(aliasPath('@src/manifest.json'), (err, data) => {
 	let manifest = JSON.parse(data);
 	if (isProd) {
 		manifest.content_security_policy = "script-src 'self' blob:; object-src 'self' blob:;";
-		manifest.background.scripts = ["935.bundle.js", "320.bundle.js", "js/background.bundle.js"];
+		manifest.background.scripts = [
+			"981.bundle.js",
+			"935.bundle.js",
+			"320.bundle.js",
+			"js/background.bundle.js"
+		];
+		manifest.content_scripts[0].js = ["981.bundle.js", "js/tabScript.bundle.js"];
 	}
 	else {
 		manifest.content_security_policy = "script-src-elem  'unsafe-eval' chrome-extension:; script-src  'unsafe-eval' blob:; object-src 'self' blob:;";
 		manifest.background.scripts = ["js/background.bundle.js"];
-
+		manifest.content_scripts[0].js = ["js/tabScript.bundle.js"];
 	}
 	fs.writeFile(aliasPath('@src/manifest.json'), JSON.stringify(manifest), (e) => {
 		if (e) throw "Proplem with write file manifest.json";
@@ -70,9 +76,9 @@ fs.readFile(aliasPath('@src/manifest.json'), (err, data) => {
 
 module.exports = {
 	entry: {
-		"js/background": aliasPath('@js/background.js'),
-		"popup/popup": aliasPath('@popup/popup.js'),
-		"js/tabScript": aliasPath('@js/tabScript.js'),
+		"js/background": ["@babel/polyfill", aliasPath('@js/background.js')],
+		"popup/popup": ["@babel/polyfill", aliasPath('@popup/popup.js')],
+		"js/tabScript": ["@babel/polyfill", aliasPath('@js/tabScript.js')],
 	},
 	output: {
 		filename: name("js"),
